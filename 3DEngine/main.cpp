@@ -1,4 +1,5 @@
 #include "include\3DEngine.h"
+
 #include <assimp\Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -30,6 +31,19 @@ void TestGame::Init(const Window& window)
 		assert(0 == 0);
 	}
 
+	aiNode* root = scene->mRootNode;
+	for (int i = 0; i < root->mNumChildren; i++)
+	{
+		aiNode* child = root->mChildren[i];
+		aiMetadata* meta = child->mMetaData;
+
+		aiString s;
+		meta->Get("UserProperties", s);
+
+		int a = 0;
+		
+	}
+
 	if (scene->HasCameras())
 	{
 		for(int i = 0; i < scene->mNumCameras; i++)
@@ -51,7 +65,23 @@ void TestGame::Init(const Window& window)
 						->AddComponent(new FreeMove(10.0f)));
 		}
 	}
-	std::vector<Material*> materials;
+	if (scene->HasLights())
+	{
+		for (int i = 0; i < scene->mNumLights; i++)
+		{
+			aiLight* light = scene->mLights[i];
+			aiNode* lightNode = scene->mRootNode->FindNode(light->mName);
+			if (light->mType == aiLightSource_POINT)
+			{
+				aiVector3D lightPos = lightNode->mTransformation * light->mPosition;
+
+				AddToScene((new Entity(Vector3f(lightPos.x, lightPos.y, lightPos.z)))
+					->AddComponent(new PointLight(Vector3f(1, 1, 1), 1.0f, Attenuation(0, 0, 1))));
+			}
+		}
+	}
+
+	/*std::vector<Material*> materials;
 	if (scene->HasMaterials())
 	{
 		for (int i = 0; i < scene->mNumMaterials; i++)
@@ -132,24 +162,7 @@ void TestGame::Init(const Window& window)
 		}
 	}
 	for (int i = 0; i < materials.size(); i++)
-		delete materials[i];
-
-	if (scene->HasLights())
-	{
-		for (int i = 0; i < scene->mNumLights; i++)
-		{
-			aiLight* light = scene->mLights[i];
-			aiNode* lightNode = scene->mRootNode->FindNode(light->mName);
-
-			if (light->mType == aiLightSource_POINT)
-			{
-				aiVector3D lightPos = lightNode->mTransformation * light->mPosition;
-
-				AddToScene((new Entity(Vector3f(lightPos.x, lightPos.y, lightPos.z)))
-					->AddComponent(new PointLight(Vector3f(1, 1, 1), 1.0f, Attenuation(0, 0, 1))));
-			}
-		}
-	}
+		delete materials[i];*/
 
 	/*AddToScene((new Entity())
 	->AddComponent(new CameraComponent(Matrix4f().InitPerspective(

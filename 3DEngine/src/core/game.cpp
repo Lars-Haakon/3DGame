@@ -1,8 +1,6 @@
 #include "../../include/core/game.h"
 #include "../../include/rendering/renderingEngine.h"
 
-#include <iostream>
-
 void Game::ProcessInput(const Input& input, float delta)
 {
 	m_inputTimer.StartInvocation();
