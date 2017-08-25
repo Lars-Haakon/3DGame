@@ -16,6 +16,63 @@ private:
 	void operator=(const TestGame& other) {}
 };
 
+Entity* traverse(aiNode* node, aiMesh** meshes, aiMaterial** materials)
+{
+	Entity* e = new Entity();
+	
+	for (int i = 0; i < node->mNumMeshes; i++)
+	{
+		aiMesh* mesh = meshes[node->mMeshes[i]];
+
+		std::vector<Vector3f> positions;
+		std::vector<Vector2f> texCoords;
+		std::vector<Vector3f> normals;
+		std::vector<Vector3f> tangents;
+		std::vector<unsigned int> indices;
+
+		const aiVector3D aiZeroVector(0.0f, 0.0f, 0.0f);
+		for (unsigned int j = 0; j < mesh->mNumVertices; j++)
+		{
+			const aiVector3D pos = node->mTransformation * mesh->mVertices[j];
+			const aiVector3D normal = mesh->mNormals[j];
+			const aiVector3D texCoord = mesh->HasTextureCoords(0) ? mesh->mTextureCoords[0][j] : aiZeroVector;
+			const aiVector3D tangent = mesh->HasTangentsAndBitangents() ? mesh->mTangents[j] : aiZeroVector;
+
+			positions.push_back(Vector3f(pos.x, pos.y, pos.z));
+			texCoords.push_back(Vector2f(texCoord.x, texCoord.y));
+			normals.push_back(Vector3f(normal.x, normal.y, normal.z));
+			tangents.push_back(Vector3f(tangent.x, tangent.y, tangent.z));
+		}
+
+		for (unsigned int j = 0; j < mesh->mNumFaces; j++)
+		{
+			const aiFace& face = mesh->mFaces[j];
+			assert(face.mNumIndices == 3);
+			indices.push_back(face.mIndices[0]);
+			indices.push_back(face.mIndices[2]);
+			indices.push_back(face.mIndices[1]);
+		}
+
+		aiMaterial* mat = materials[mesh->mMaterialIndex];
+
+		aiString matName;
+		mat->Get(AI_MATKEY_NAME, matName);
+
+		e->AddComponent(new MeshRenderer(Mesh(mesh->mName.C_Str(), IndexedModel(indices, positions, texCoords, normals, tangents).Finalize()), Material(matName.C_Str())));
+	}
+
+	for (int i = 0; i < node->mNumChildren; i++)
+	{
+		if (node->mChildren[i]->mNumMeshes > 0)
+		{
+			Entity* eChild = traverse(node->mChildren[i], meshes, materials);
+			e->AddChild(eChild);
+		}
+	}
+
+	return e;
+}
+
 void TestGame::Init(const Window& window)
 {
 	Assimp::Importer importer;
@@ -29,19 +86,6 @@ void TestGame::Init(const Window& window)
 	if (!scene)
 	{
 		assert(0 == 0);
-	}
-
-	aiNode* root = scene->mRootNode;
-	for (int i = 0; i < root->mNumChildren; i++)
-	{
-		aiNode* child = root->mChildren[i];
-		aiMetadata* meta = child->mMetaData;
-
-		aiString s;
-		meta->Get("UserProperties", s);
-
-		int a = 0;
-		
 	}
 
 	if (scene->HasCameras())
@@ -81,7 +125,7 @@ void TestGame::Init(const Window& window)
 		}
 	}
 
-	/*std::vector<Material*> materials;
+	std::vector<Material*> materials;
 	if (scene->HasMaterials())
 	{
 		for (int i = 0; i < scene->mNumMaterials; i++)
@@ -116,12 +160,23 @@ void TestGame::Init(const Window& window)
 		}
 	}
 
-	if (scene->HasMeshes())
+	aiNode* root = scene->mRootNode;
+	for (int i = 0; i < root->mNumChildren; i++)
+	{
+		if (root->mChildren[i]->mNumMeshes > 0)
+		{
+			Entity* e = traverse(root->mChildren[i], scene->mMeshes, scene->mMaterials);
+			AddToScene(e);
+		}
+	}
+
+	/*if (scene->HasMeshes())
 	{
 		for (int i = 0; i < scene->mNumMeshes; i++)
 		{
 			aiMesh* mesh = scene->mMeshes[i];
-			aiNode* meshNode = scene->mRootNode->FindNode(Util::Split(mesh->mName.C_Str(), '.')[0].c_str());
+			const char* meshName = mesh->mName.C_Str();
+			aiNode* meshNode = scene->mRootNode->FindNode(meshName);
 
 			std::vector<Vector3f> positions;
 			std::vector<Vector2f> texCoords;
@@ -160,9 +215,9 @@ void TestGame::Init(const Window& window)
 			AddToScene((new Entity())
 						->AddComponent(new MeshRenderer(Mesh(mesh->mName.C_Str(), IndexedModel(indices, positions, texCoords, normals, tangents).Finalize()), Material(matName.C_Str()))));
 		}
-	}
+	}*/
 	for (int i = 0; i < materials.size(); i++)
-		delete materials[i];*/
+		delete materials[i];
 
 	/*AddToScene((new Entity())
 	->AddComponent(new CameraComponent(Matrix4f().InitPerspective(
