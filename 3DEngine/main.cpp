@@ -343,7 +343,7 @@ void TestGame::Init(const Window& window)
 int main()
 {
 	TestGame game;
-	Window window(800, 600, "3D Game Engine");
+	Window window(1280, 720, "3D Game Engine");
 	RenderingEngine renderer(window);
 
 	//window.SetFullScreen(true);
