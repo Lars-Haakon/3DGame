@@ -212,7 +212,9 @@ void MeshData::Draw() const
 Mesh::Mesh(const std::string& meshName, const IndexedModel& model) :
 	m_fileName(meshName)
 {
-	std::map<std::string, MeshData*>::const_iterator it = s_resourceMap.find(meshName);
+	m_meshData = new MeshData(model);
+	
+	/*std::map<std::string, MeshData*>::const_iterator it = s_resourceMap.find(meshName);
 	if (it != s_resourceMap.end())
 	{
 		std::cout << "Error adding mesh " << meshName << ": Mesh already exists by the same name!" << std::endl;
@@ -222,7 +224,7 @@ Mesh::Mesh(const std::string& meshName, const IndexedModel& model) :
 	{
 		m_meshData = new MeshData(model);
 		s_resourceMap.insert(std::pair<std::string, MeshData*>(meshName, m_meshData));
-	}
+	}*/
 }
 
 Mesh::Mesh(const std::string& fileName) :

@@ -575,13 +575,13 @@ public:
 
 	inline Matrix4<T> InitRotationFromDirection(const Vector3<T>& forward, const Vector3<T>& up)
 	{
-		Vector3<T> _left = Vector3<T>(forward.Normalized()*-1).Cross(up.Normalized());
+		Vector3<T> _right = Vector3<T>(forward.Normalized()).Cross(up.Normalized());
 		Vector3<T> _up = up.Normalized();
-		Vector3<T> _back = _up.Cross(_left);
+		Vector3<T> _back = _right.Cross(_up);
 
-		return InitRotationFromVectors(	Vector3f(_left.GetX(), _up.GetX(), _back.GetX()), 
-										Vector3f(_left.GetY(), _up.GetY(), _back.GetY()), 
-										Vector3f(_left.GetZ(), _up.GetZ(), _back.GetZ()));
+		return InitRotationFromVectors(	Vector3f(_right.GetZ(), _up.GetZ(), _back.GetZ()),
+										Vector3f(_right.GetY(), _up.GetY(), _back.GetY()),
+										Vector3f(_right.GetX(), _up.GetX(), _back.GetX()));
 	}
 
 	inline Matrix4<T> InitPerspective(T fov, T aspectRatio, T zNear, T zFar)
